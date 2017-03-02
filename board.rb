@@ -1,264 +1,58 @@
-require 'json'
 class Board
-  @@max = 16
   @@min = 4
+  @@max = 16
 
-  attr_reader :moves
+  attr_reader :grid, :move
+  attr_accessor :column_moves, :row_moves, :total_moves
 
-  def initialize(board, move)
-    #board is JSON formatted 2D list
-    #move is 3-array of row #, col #, player #
-    @moves = 0
-    @grid = JSON.parse(board)
-    validate
-    @rows = @grid.length
-    @columns = @grid[0].length
-  end
-
-  def validate
-    if @grid.nil?
-      puts 'Error! Could not read JSON file!'
-    elsif @grid.respond_to?('each')
-      @grid.each do |row|
-        if row.respond_to?('each')
-          row.each do |tile|
-            (0..2).member?(tile) ? (tile == 0 ? next : @moves += 1) : raise StandardError, 'Error! Invalid value in grid object!'
-          end
-        else
-          raise StandardError, 'Error! Could not access column data in rows!'
-        end
-      end
+  # Class Methods
+  def Board.setrows(rows)
+    if rows < @@min or rows > @@max
+      raise StandardError, 'Error! Invalid grid size!'
     else
-      raise StandardError, 'Error! Could not access row data!'
+      @@rows = rows
     end
   end
 
-  def win?
-    if @moves < 7
-      return false
+  def Board.setcols(cols)
+    if cols < @@min or cols > @@max
+      raise StandardError, 'Error! Invalid grid size!'
     else
-      [rowsearch, columnsearch, diagsearch].each do |func|
-        a = func
-        if a == true
-          return true
-        end
-      end
-      return false
+      @@columns = cols
     end
   end
 
-  def diagsearch
-    found = false
-    for i in 0..@rows - 4
-      bluecount = 0
-      redcount = 0
-      switch = 0
-      j = 0
-      k = i
-      until j >= @columns or k >= @rows
-        case @grid[k][j]
-          when 1
-            if switch != 1
-              switch = 1
-              bluecount = 0
-            end
-            redcount += 1
-          when 2
-            if switch != 2
-              switch = 2
-              redcount = 0
-            end
-            bluecount += 1
-          else
-            switch = 0
-            bluecount = 0
-            redcount = 0
-        end
-        k += 1
-        j += 1
-      end
-      if bluecount >= 4 or redcount >= 4
-        found = true
-        return found
-      end
+  def initialize(board, move, player)
+    # board is 2D list or another Board object
+    # move is column to drop tile in
+    # player is either 1 or 2
+    # The object represents the state produced by applying the move to the board
+    if board.class == Board
+      # Some variables need to be explicitly passed by value
+      @grid = board.grid.clone
+      @total_moves = board.total_moves.clone
+      @total_moves += 1
+      @move = move
+      @player = player - 1
+      @column_moves = board.column_moves.clone
+      @row_moves = board.row_moves.clone
+      make_move(move, player)
+    elsif board.class == Array
+      @grid = board.clone
+      @move = move
+      @player = player - 1
+      # The following are all set by driver validate function
+      @total_moves = 0
+      @column_moves = Hash.new{|cm, key| cm[key] = [0,0]}
+      @row_moves = Hash.new{|rm, key| rm[key] = [0,0]}
     end
-    for i in 3..@rows - 1
-      redcount = 0
-      bluecount = 0
-      switch = 0
-      j = 0
-      k = i
-      until j < 0 or k < 0 do
-        case @grid[k][j]
-          when 1
-            if switch != 1
-              switch = 1
-              bluecount = 0
-            end
-            redcount += 1
-          when 2
-            if switch != 2
-              switch = 2
-              redcount = 0
-            end
-            bluecount += 1
-          else
-            switch = 0
-            bluecount = 0
-            redcount = 0
-        end
-        k -= 1
-        j += 1
-      end
-      if bluecount >= 4 or redcount >= 4
-        found = true
-        return found
-      end
-    end
-    for i in 1..@columns - 4
-      redcount = 0
-      bluecount = 0
-      switch = 0
-      j = i
-      k = @rows - 1
-      until j >= @columns or k < 0 do
-        case @grid[k][j]
-          when 1
-            if switch != 1
-              switch = 1
-              bluecount = 0
-            end
-            redcount += 1
-          when 2
-            if switch != 2
-              switch = 2
-              redcount = 0
-            end
-            bluecount += 1
-          else
-            switch = 0
-            bluecount = 0
-            redcount = 0
-        end
-        k -= 1
-        j += 1
-      end
-      if bluecount >= 4 or redcount >= 4
-        found = true
-        return found
-      end
-    end
-    for i in 1..@columns - 4
-      redcount = 0
-      bluecount = 0
-      switch = 0
-      j = i
-      k = 0
-      until j >= @columns or k >= @rows do
-        case @grid[k][j]
-          when 1
-            if switch != 1
-              switch = 1
-              bluecount = 0
-            end
-            redcount += 1
-          when 2
-            if switch != 2
-              switch = 2
-              redcount = 0
-            end
-            bluecount += 1
-          else
-            switch = 0
-            bluecount = 0
-            redcount = 0
-        end
-        k += 1
-        j += 1
-      end
-      if bluecount >= 4 or redcount >= 4
-        found = true
-        return found
-      end
-    end
-    return found
   end
 
-  def rowsearch
-    found = false
-    j = 0
-    until found or j == @rows do
-      i = 0
-      redcount = 0 #1
-      bluecount = 0 #2
-      switch = 0 #Switch for consecutive tile color. 1 for red, 2 for blue.
-      until i == @columns do
-        case @grid[j][i]
-          when 1
-            if switch != 1
-              switch = 1
-              bluecount = 0
-            end
-            redcount += 1
-          when 2
-            if switch != 2
-              switch = 2
-              redcount = 0
-            end
-            bluecount += 1
-          else
-            switch = 0
-            bluecount = 0
-            redcount = 0
-        end
-        if bluecount == 4 or redcount == 4 or redcount + (@columns - i) < 4 or bluecount + (@columns - i) < 4
-          found = true
-          break
-        end
-        i += 1
-      end
-      j += 1
-    end
-    return found
+  def make_move(move, player)
+    @column_moves[move][@player] += 1
+    r = (@@rows - 1) - (@column_moves[move][0] + @column_moves[move][1])
+    @row_moves[r][@player] += 1
+    @grid[@move][r] = player
   end
-
-  def columnsearch
-    found = false
-    j = 0
-    until found or j == @columns do
-      i = 0
-      redcount = 0 #1
-      bluecount = 0 #2
-      switch = 0 #Switch for consecutive tile color. 1 for red, 2 for blue.
-      until i == @rows do
-        case @grid[i][j]
-          when 1
-            if switch != 1
-              switch = 1
-              bluecount = 0
-            end
-            redcount += 1
-          when 2
-            if switch != 2
-              switch = 2
-              redcount = 0
-            end
-            bluecount += 1
-          else
-            switch = 0
-            bluecount = 0
-            redcount = 0
-        end
-        if bluecount == 4 or redcount == 4 or redcount + (@rows - i) < 4 or bluecount + (@rows - i) < 4
-          found = true
-          break
-        end
-        i += 1
-      end
-      j += 1
-    end
-    return found
-  end
-
 
 end
