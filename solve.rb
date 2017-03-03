@@ -34,6 +34,7 @@ class Solve
         end
       end
     end
+    return false
   end
 
   def diagsearch(board)
@@ -258,16 +259,21 @@ class Solve
     return found
   end
 
-  def moves(board)
+  def children(board, player)
     # Returns legal moves in columns ordered by best columns (middle) to worst (outside)
     mvs = []
-
     board.grid.each_index do |i|
       cm = board.column_moves[i][0] + board.column_moves[i][1]
       unless cm >= board.rows
-        mvs.push(i)
+        mvs.push(Board(board, i, player))
       end
     end
+    if mvs.length > 1
+      mvs.each do |b|
+
+      end
+    end
+    return mvs
   end
 
   def ab_negamax_search(board, depth, a, b, player)
@@ -275,7 +281,7 @@ class Solve
       return player
     end
 
-    children = moves(board)
+    children = children(board, player)
     best = NEGINF
 
   end
