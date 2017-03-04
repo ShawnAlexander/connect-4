@@ -1,5 +1,5 @@
 require 'json'
-class Driver
+class Validate
 
  def initialize(jboard, move)
    temp = JSON.parse(jboard)
@@ -26,12 +26,12 @@ class Driver
          col.each do |row|
            case row
              when 2
-               @iboard.column_moves[i][1] += 1
-               @iboard.row_moves[j][1] += 1
+               @iboard.column_moves[i][2] += 1
+               @iboard.row_moves[j][2] += 1
                @iboard.total_moves += 1
              when 1
-               @iboard.column_moves[i][0] += 1
-               @iboard.row_moves[j][0] += 1
+               @iboard.column_moves[i][1] += 1
+               @iboard.row_moves[j][1] += 1
                @iboard.total_moves += 1
              when 0
                nil  # Do nothing

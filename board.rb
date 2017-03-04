@@ -33,24 +33,27 @@ class Board
       @total_moves = board.total_moves.clone
       @total_moves += 1
       @move = move
-      @player = player - 1
+      @player = player
       @column_moves = board.column_moves.clone
       @row_moves = board.row_moves.clone
       make_move(move, player)
     elsif board.class == Array
       @grid = board.clone
       @move = move
-      @player = player - 1
+      @player = player
       # The following are all set by driver validate function
       @total_moves = 0
-      @column_moves = Hash.new{|cm, key| cm[key] = [0,0]}
-      @row_moves = Hash.new{|rm, key| rm[key] = [0,0]}
+      @column_moves = Hash.new{|cm, key| cm[key] = [0,0,0]}
+      @row_moves = Hash.new{|rm, key| rm[key] = [0,0,0]}
     end
   end
 
   def make_move(move, player)
+    if @column_moves[move][1] + @column_moves[move][2] + 1 > @@rows
+      raise StandardError, 'Error! Illegal move!'
+    end
     @column_moves[move][@player] += 1
-    r = (@@rows - 1) - (@column_moves[move][0] + @column_moves[move][1])
+    r = (@@rows - 1) - (@column_moves[move][1] + @column_moves[move][2])
     @row_moves[r][@player] += 1
     @grid[@move][r] = player
   end

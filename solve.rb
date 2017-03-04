@@ -3,27 +3,29 @@ class Solve
   NEGINF = -1.0/0.0
   POSINF = 1.0/0.0
 
+
+
   def initialize(board)
     @init_grid = board
-    @order = []
+    @order = Array.new(board.columns) #Fixed size
+    @score = Array.new(board.columns)
     i = 0
     (0...board.columns).each do |col|
       if col % 2 == 0
         i *= -1
-        j = (board.rows/2).floor + i
-        @order.push(j)
+        j = (board.columns/2).floor + i
+        @order[j] = col
       else
         i += 1
         i *= -1
-        j = (board.rows/2).floor + i
-        @order.push(j)
+        j = (board.columns/2).floor + i
+        @order[j] = col
       end
     end
 
   end
 
   def term?(board)
-
     if board.total_moves < 7
       return false
     else
@@ -32,6 +34,9 @@ class Solve
         if a
           return true
         end
+      end
+      if board.total_moves == board.columns * board.rows
+        return true
       end
     end
     return false
@@ -262,34 +267,46 @@ class Solve
   def children(board, player)
     # Returns legal moves in columns ordered by best columns (middle) to worst (outside)
     mvs = []
+    nmvs = Array.new(board.columns)
     board.grid.each_index do |i|
-      cm = board.column_moves[i][0] + board.column_moves[i][1]
+      cm = board.column_moves[i][0] + board.column_moves[i][1] # Number of moves in column
       unless cm >= board.rows
         mvs.push(Board(board, i, player))
       end
     end
     if mvs.length > 1
       mvs.each do |b|
-
+        nmvs[@order[b.move]] = b # Map move to ordered position
       end
+      nmvs.compact #Remove nil values
+      return nmvs
     end
     return mvs
   end
 
   def ab_negamax_search(board, depth, a, b, player)
     if depth == 0 or term?(board)
-      return player
+      return player * depth
     end
-
     children = children(board, player)
     best = NEGINF
-
+    children.each do |child|
+      v = -ab_negamax_search(child, depth - 1, -b, -a, -player)
+      best = [best, v].max
+      a = [a, v].max
+      if a >= b
+        break
+      end
+    end
+    return best
   end
 
   def solve(board, player)
     # player = 1 does NOT correspond to player 1
-    # player = 1 corresponds to root (maximizing) node
+    # player = 1 corresponds to root (maximizing) node (the player calling this program)
     # player = -1 corresponds to opponent
+    d = board.rows*board.columns - board.total_moves
+    ab_negamax_search(board, d, NEGINF, POSINF, player)
 
   end
 end
