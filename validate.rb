@@ -1,24 +1,26 @@
 require 'json'
 class Validate
 
- def initialize(jboard, move)
-   temp = JSON.parse(jboard)
-   @gmatrix = temp['grid']  #2D List
-   @height = temp['height']
-   @width = temp['width']
-   @player =temp['player']
-   mtemp = JSON.parse(move)
-   @move = mtemp['move']
-   validate
- end
+  attr_accessor :iboard
 
- def validate   # Called only once on startup
+  def initialize(jboard, move)
+    @iboard = nil
+    temp = JSON.parse(jboard, symbolize_names: true)
+    @gmatrix = temp[:grid]  #2D List
+    @height = temp[:height]
+    @width = temp[:width]
+    @player =temp[:player]
+    mtemp = JSON.parse(move, symbolize_names: true)
+    @move = mtemp[:move]
+    validate
+  end
+  def validate   # Called only once on startup
    if @gmatrix.nil?
      puts 'Error! Could not read JSON file!'
    elsif @gmatrix.respond_to?('each')
-     @iboard = Board(@gmatrix, @move, @player)
-     Board.setcols(@width)
-     Board.setrows(@height)
+     @iboard = Board.new(@gmatrix, @move, @player)
+     @iboard.class.setcols(@width)
+     @iboard.class.setrows(@height)
      i = 0
      @gmatrix.each do |col|
        if col.respond_to?('each')
@@ -49,5 +51,5 @@ class Validate
    else
      raise StandardError, 'Error! Could not access row data!'
    end
- end
+  end
 end
