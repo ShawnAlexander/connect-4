@@ -3,7 +3,9 @@ class Solve
   # Constants
   NEGINF = -1.0/0.0
   POSINF = 1.0/0.0
+
   attr_accessor :init_grid
+  attr_reader :move
   def initialize(board)
     @init_grid = board
     @columns = Board.class_variable_get('@@columns')
@@ -328,6 +330,7 @@ class Solve
     d = @rows * @columns - @init_grid.total_moves
     v = ab_negamax_search(@init_grid, d, NEGINF, POSINF, 1)
     move = @score.index(v)
+    @move= move
     #puts("Nodes generated: #{@nodes_generated}")
     #puts("Score board: #{@score}")
     #puts('Nodes at depth')

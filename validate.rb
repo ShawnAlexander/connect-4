@@ -14,7 +14,7 @@ class Validate
     @move = mtemp[:move]
     validate
   end
-  def validate   # Called only once on startup
+  def validate
    if @gmatrix.nil?
      puts 'Error! Could not read JSON file!'
    elsif @gmatrix.respond_to?('each')
